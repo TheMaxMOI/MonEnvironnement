@@ -1,0 +1,29 @@
+"Default
+syntax on
+set number
+set tabstop=4
+set shiftwidth=4
+set expandtab
+set smartindent
+
+"Autocomplition
+inoremap " ""<left>
+inoremap ' ''<left>
+inoremap ( ()<left>
+inoremap [ []<left>
+inoremap { {}<left>
+inoremap {<CR> {<CR>}<ESC>O
+inoremap {;<CR> {<CR>};<ESC>O
+
+"Numbers and First Column
+highlight LineNr ctermfg=DarkGray ctermbg=Black
+
+"Highlight Words
+set hlsearch
+set incsearch
+
+" Special case: Makefiles need real tabs!
+augroup makefile_tabs
+  autocmd!
+  autocmd FileType make setlocal noexpandtab tabstop=8 shiftwidth=8 softtabstop=0
+augroup END"
