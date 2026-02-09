@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="shortcut icon" href="logo.png">
+	<link rel="stylesheet" type="text/css" href="style.css">
+	<title>Minesweeper</title>
+</head>
+<body>
+
+	<div id="title_box">
+		<h1>Minesweeper</h1>
+	</div>
+	<div id="content_box">
+		<h2>Parameters : </h2>
+		<ul>
+			<li>Width : <input class="input_box" id=width type="number" value="16"></li>
+			<li>Length : <input class="input_box" id=length type="number" value="16"></li>
+			<li>Number of Mines (<span id="max_mines"></span>) : <input class="input_box" id=mines type="number" value="40"></li>
+		</ul>
+		<div id="game_box">
+			<div id="board"></div>
+			<div id="controls_sidebar" style="display: flex; flex-direction: column; gap: 20px;">
+				<button id="start_button" type="button">Start Game</button>
+				<p id="game_text_box"></p>
+			</div>
+		</div>
+	</div>
+	</div>
+	<div id="footer_box">
+		<div id="left_footer_box"><p class="detail_box">Made By MaxMOI</p></div>
+		<div id="middle_footer_box"><p class="detail_box">Portable Version<br>This version must work on PIE.</p></div>
+		<div id="right_footer_box"><p class="detail_box">More games later...</p></div>
+	</div>
+
+	<script src="script.js"></script>
+	<script src="game.js"></script>
+
+</body>
+</html>
