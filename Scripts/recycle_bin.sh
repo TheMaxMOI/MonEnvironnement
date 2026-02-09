@@ -48,7 +48,7 @@ abspath() {
 }
 
 strip_path(){
-    echo "$*" | sed "s,^.*/,,"
+    echo "$*" | sed 's,/$,,' | sed "s,^.*/,,"
 }
 
 delete(){
