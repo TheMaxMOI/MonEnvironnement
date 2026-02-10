@@ -53,7 +53,7 @@ strip_path(){
 
 extract_index(){
     var=$(echo "$1" | grep -o "[0-9]*$")
-    if [ -z "$var"];then
+    if [ -z "$var" ];then
         var=0
     fi
     echo $var
@@ -70,7 +70,6 @@ delete_with_conflict(){
     fi
 
     if [ "conflict" = "$log_content" ];then
-        echo There has been a conflict
         max=0
         for filename in "$bin_pathname/$name/"*;do
             if [ -e "$filename" ]; then
@@ -81,14 +80,11 @@ delete_with_conflict(){
                 fi
             fi
         done
-        next=$(($number+1))
-        echo The next index is $next
+        next=$(($max+1))
         mv "$full_path/$name" "$bin_pathname/$name/${name}__$next"
-        echo  "$full_path/$name" > "$bin_pathname/.log_${name}__$next"
+        echo  "$full_path/$name" > "$bin_pathname/$name/.log_${name}__$next"
 
     else #Resolving a conflict for the first time
-        echo Resolving a conflict for the first time
-
         mv "$bin_pathname/$name" "$bin_pathname/${name}__0"
         mkdir "$bin_pathname/$name"
         mv "$bin_pathname/${name}__0" "$bin_pathname/$name"
@@ -102,6 +98,7 @@ delete_with_conflict(){
 
         echo "conflict" > "$bin_pathname/.log_$name"
     fi
+
         echo "moved $name to the bin"
 }
 
@@ -139,6 +136,25 @@ empty(){
     echo "The bin has been emptied"
 }
 
+restore_with_conflicts(){
+    conflict_fold=$2
+    name=$(strip_path "$1")
+    log_path="$bin_pathname/$conflict_fold/.log_$name"
+    if [ ! -e $log_path ]; then
+        echo "$1 is an untracked file"
+        return;
+    fi
+
+    log_content=""
+    if [ -e "$log_path" ]; then
+        IFS= read -r log_content < "$log_path"
+    fi
+
+    echo "restoring $name to $log_content"
+    mv "$1" "$log_content"
+    rm $log_path
+}
+
 restore(){
     while [ $# -ne 0 ]; do
         log_path="$bin_pathname/.log_$1"
@@ -148,10 +164,24 @@ restore(){
             continue
         fi
 
-        previous_path=""
-        IFS= read -r previous_path < "$log_path"
-        echo "restoring $1 to $previous_path"
-        mv "$bin_pathname/$1" "$previous_path"
+        log_content=""
+        if [ -e "$log_path" ]; then
+            IFS= read -r log_content < "$log_path"
+        fi
+
+        if [ "conflict" = "$log_content" ];then
+            conflict_fold=$1
+            for file in "$bin_pathname/$1/"*;do
+                restore_with_conflicts "$file" "$conflict_fold"
+            done
+            rmdir "$bin_pathname/$conflict_fold"
+            rm "$bin_pathname/.log_$conflict_fold"
+            shift
+            continue
+        fi
+
+        echo "restoring $1 to $log_content"
+        mv "$bin_pathname/$1" "$log_content"
         rm $log_path
         shift
     done
@@ -235,4 +265,3 @@ if [ "$mode" = "restore" ]; then
     restore $files
     exit
 fi
-
