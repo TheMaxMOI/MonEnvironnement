@@ -51,6 +51,60 @@ strip_path(){
     echo "$*" | sed 's,/$,,' | sed "s,^.*/,,"
 }
 
+extract_index(){
+    var=$(echo "$1" | grep -o "[0-9]*$")
+    if [ -z "$var"];then
+        var=0
+    fi
+    echo $var
+}
+
+delete_with_conflict(){
+    name="$1"
+    full_path="$2"
+    main_log="$bin_pathname/.log_$name"
+
+    log_content=""
+    if [ -e "$main_log" ]; then 
+        IFS= read -r log_content < "$main_log"
+    fi
+
+    if [ "conflict" = "$log_content" ];then
+        echo There has been a conflict
+        max=0
+        for filename in "$bin_pathname/$name/"*;do
+            if [ -e "$filename" ]; then
+                base=$(strip_path "$filename")
+                idx=$(extract_index "$base")
+                if [ "$idx" -gt "$max" ]; then
+                    max=$idx
+                fi
+            fi
+        done
+        next=$(($number+1))
+        echo The next index is $next
+        mv "$full_path/$name" "$bin_pathname/$name/${name}__$next"
+        echo  "$full_path/$name" > "$bin_pathname/.log_${name}__$next"
+
+    else #Resolving a conflict for the first time
+        echo Resolving a conflict for the first time
+
+        mv "$bin_pathname/$name" "$bin_pathname/${name}__0"
+        mkdir "$bin_pathname/$name"
+        mv "$bin_pathname/${name}__0" "$bin_pathname/$name"
+
+        if [ -e "$main_log" ]; then
+            mv "$main_log" "$bin_pathname/$name/.log_${name}__0"
+        fi
+
+        mv "$full_path/$name" "$bin_pathname/$name/${name}__1"
+        echo "$full_path/$name" > "$bin_pathname/$name/.log_${name}__1"
+
+        echo "conflict" > "$bin_pathname/.log_$name"
+    fi
+        echo "moved $name to the bin"
+}
+
 delete(){
     while [ $# -ne 0 ]; do
         full_path=$(abspath "$1")
@@ -60,9 +114,16 @@ delete(){
             continue
         fi
 
-        mv "$1" "$bin_pathname"
         name=$(strip_path "$1")
-        echo  $full_path > "$bin_pathname/.log_$name"
+
+        if [ -e "$bin_pathname/$name" ];then
+            delete_with_conflict "$name" "$full_path"
+            shift
+            continue
+        fi
+
+        mv "$full_path/$name" "$bin_pathname"
+        echo  "$full_path/$name" > "$bin_pathname/.log_$name"
         echo "moved $1 to the bin"
         shift
     done
@@ -131,6 +192,10 @@ parse_cmd(){
                 ls -a $bin_pathname
                 exit
                 ;;
+            -i++|--info++)
+                tree $bin_pathname -a
+                exit
+                ;;
             *)
                 break
                 ;;
@@ -140,6 +205,8 @@ parse_cmd(){
 }
 
 ### --- Main Script ---
+
+bin_pathname=$(echo $bin_pathname | sed 's,/$,,')
 
 parse_cmd $@
 
@@ -168,3 +235,4 @@ if [ "$mode" = "restore" ]; then
     restore $files
     exit
 fi
+
