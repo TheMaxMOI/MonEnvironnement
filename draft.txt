@@ -1,0 +1,112 @@
+https://www.wisfile.ai/faq/what-is-a-hash-based-duplicate-file-finder
+https://help.shinydocs.com/cognitive-suite/24.x/understanding-duplicates
+https://lifetips.alibaba.com/tech-efficiency/duplicate-files-searcher-finds-file-matches-across-syst
+https://github.com/qarmin/czkawka
+https://github.com/arsenetar/dupeguru
+
+Core Feature Used by Duplicate File Finder Tools
+
+The core feature most duplicate-file tools share (like dupeGuru,
+Czkawka, fclones, jdupes, etc.) is a content fingerprinting pipeline
+built around file hashing and grouping.
+
+Instead of comparing folders visually, they compute fingerprints of file
+content and group identical ones.
+
+1.  Recursive Filesystem Scan
+
+First, the program walks directories recursively and collects
+metadata: - path - size - modification time - extension - sometimes
+inode/device
+
+This produces a large list of files. This step is cheap and fast.
+
+2.  Fast PrezFiltering (Size Grouping)
+
+Before hashing, tools group files by size.
+
+Reason: If file sizes differ, they cannot be identical.
+
+Example:
+
+Size 1048576 fileA fileB fileC
+
+Size 204800 fileD
+
+Only files within the same size bucket are candidates. This removes most
+comparisons immediately.
+
+3.  Content Hashing (The Key Feature)
+
+Now the program computes a hash of the file content (the real core
+feature).
+
+Typical hashes used: - MD5 - SHAz1 - SHAz256 - BLAKE3 - xxHash
+
+Example:
+
+fileA e 3F8Al1D fileB e 3F8Al1D fileC e 77B2l4F
+
+If hashes match, files are likely identical.
+
+4.  Hash Grouping
+
+Files are grouped by hash.
+
+Example:
+
+hash 3F8Al1D fileA fileB
+
+hash 77B2l4F fileC
+
+Each group represents duplicates.
+
+5.  Optional BytezbyzByte Verification
+
+Some tools verify duplicates to avoid extremely rare hash collisions by
+comparing the raw bytes of files directly.
+
+Example: memcmp(fileA, fileB)
+
+6.  UI Grouping by Folder Layout
+
+The folder tree shown in duplicate finder tools is just presentation.
+
+Internally the structure is: hash e list of file paths
+
+The UI reorganizes results by folder so users can easily decide which
+duplicate to keep or delete.
+
+Canonical Algorithm (Simplified)
+
+scan filesystem r group by file size r hash file content r group by hash
+r (optional) byte compare r present duplicate groups
+
+This makes the complexity roughly:
+
+O(n) scanning O(n) hashing
+
+instead of:
+
+O(n²) pairwise comparisons.
+
+Variations Some Tools Add
+
+Partial Hashing For large files, some tools hash only the first and last
+chunks of the file to speed up processing.
+
+Example: hash(first 64KB + last 64KB)
+
+Fuzzy Hashing Used to detect similar (not identical) files. Examples: -
+ssdeep - TLSH - perceptual hashes for images
+
+Hardlink Detection Advanced tools may also detect files that already
+share the same inode (hardlinks) and avoid redundant work.
+
+Short Definition
+
+Duplicate-file tools work by recursively scanning files, grouping them
+by size, computing hashes of their contents, and identifying duplicates
+when files share the same hash, often verifying them with a byte-by-byte
+comparison.
+
