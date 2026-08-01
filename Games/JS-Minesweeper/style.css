@@ -1,9 +1,46 @@
+:root {
+    /* Core palette */
+    --color-white: #ffffff;
+    --color-black: #000000;
+    --color-page-bg: #f5f5f5;
+    --color-accent: #005ce6;       /* primary action color: start button, focus states, highlights */
+    --color-accent-bg: #eef6ff;    /* light tint of the accent, used behind focused inputs */
+
+    /* Board cell states */
+    --color-cell-border: #dddddd;
+    --color-cell-hover-bg: #f0f0f0;
+    --color-cell-revealed-bg: #eeeeee;
+    --color-cell-revealed-border: #cccccc;
+    --color-mine: #ff0033;
+
+    /* Footer */
+    --color-footer-divider: #333333;
+
+    /* Classic Minesweeper number colors (1-8 convention) */
+    --color-num-1: blue;
+    --color-num-2: green;
+    --color-num-3: red;
+    --color-num-4: darkblue;
+    --color-num-5: brown;
+    --color-num-6: cyan;
+    --color-num-7: black;
+    --color-num-8: gray;
+
+    /* Fonts */
+    --font-mono: 'ui-monospace', 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+    --font-mono-cell: 'Courier New', Courier, monospace; /* tighter face used just for board glyphs */
+
+    /* Recurring measurements */
+    --border-width: 2px;   /* standard box border weight used across boxes/buttons/inputs */
+    --cell-size: 32px;
+}
+
 body, button, input, .cell, #game_text_box, .detail_box {
-    font-family: 'ui-monospace', 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+    font-family: var(--font-mono);
 }
 
 body {
-    background-color: #f5f5f5; 
+    background-color: var(--color-page-bg);
     margin: 0;
     /* Allows the body to grow horizontally if the game board is wider than the screen */
     min-width: fit-content;
@@ -11,28 +48,28 @@ body {
 }
 
 #title_box {
-    background-color: #fff; 
+    background-color: var(--color-white);
     padding: 20px;
-    color: #000;
+    color: var(--color-black);
     text-transform: uppercase;
     letter-spacing: 2px;
-    border: 2px solid #000;
+    border: var(--border-width) solid var(--color-black);
     margin: 20px;
-    box-shadow: 8px 8px 0px #000;
+    box-shadow: 8px 8px 0px var(--color-black);
     /* Ensure title box stretches if the content is wide */
     width: fit-content;
-    min-width: 300px; 
+    min-width: 300px;
     box-sizing: border-box;
 }
 
 #content_box {
-    background-color: #fff;
-    border: 2px solid #000;
+    background-color: var(--color-white);
+    border: var(--border-width) solid var(--color-black);
     padding: 40px;
     margin: 20px;
-    box-shadow: 8px 8px 0px #000;
+    box-shadow: 8px 8px 0px var(--color-black);
 
-    /* Changed from invalid '800' to fit-content so it wraps the board exactly */
+    /* fit-content so the box wraps the board exactly instead of a fixed px width */
     width: fit-content;
     min-width: 600px; /* Prevents it from looking too thin on small boards */
     height: auto;
@@ -40,7 +77,7 @@ body {
     box-sizing: border-box;
 }
 
-/* Parameters List Style */
+/* Parameters list style */
 #content_box ul {
     list-style: none;
     padding: 0;
@@ -50,31 +87,25 @@ body {
     margin-bottom: 10px;
     display: flex;
     align-items: center;
-}
-
-#content_box li label, 
-#content_box li {
-    font-family: monospace;
     font-weight: bold;
 }
 
 .input_box {
-    border: 2px solid #000;
-    border-radius: 0;          
+    border: var(--border-width) solid var(--color-black);
+    border-radius: 0;
     padding: 5px;
-    font-family: monospace;
     width: 60px;
-    margin-left: 10px;         
-    background: #fff;
+    margin-left: 10px;
+    background: var(--color-white);
     outline: none;
 }
 
 .input_box:focus {
-    background: #eef6ff;
-    border-color: #005ce6;
+    background: var(--color-accent-bg);
+    border-color: var(--color-accent);
 }
 
-/* The Game Layout */
+/* The game layout */
 #game_box {
     display: flex;
     flex-direction: row;
@@ -83,135 +114,132 @@ body {
     gap: 30px;
     margin-top: 30px;
     /* Width is determined by children (board + sidebar) */
-    width: auto; 
+    width: auto;
 }
 
 #start_button {
-    background-color: #005ce6;
-    color: white;
-    border: 2px solid #000;
+    background-color: var(--color-accent);
+    color: var(--color-white);
+    border: var(--border-width) solid var(--color-black);
     padding: 10px 20px;
     font-weight: bold;
     text-transform: uppercase;
     cursor: pointer;
-    box-shadow: 4px 4px 0px #000;
+    box-shadow: 4px 4px 0px var(--color-black);
     transition: all 0.1s;
     white-space: nowrap;
 }
 
 #start_button:active {
-    box-shadow: 0px 0px 0px #000;
+    box-shadow: 0px 0px 0px var(--color-black);
     transform: translate(2px, 2px);
 }
 
 #game_text_box {
     width: 180px;
     padding: 15px;
-    background-color: #fff;
-    color: #000;
-    font-family: monospace;
-    border: 4px solid #000;
-    box-shadow: 4px 4px 0px #005ce6;
+    background-color: var(--color-white);
+    color: var(--color-black);
+    border: 4px solid var(--color-black);
+    box-shadow: 4px 4px 0px var(--color-accent);
     min-height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-/* The Board */
+/* The board */
 #board {
     display: grid;
-    gap: 0px; 
-    border: 2px solid #000;
-    background-color: #000;
+    gap: 0px;
+    border: var(--border-width) solid var(--color-black);
+    background-color: var(--color-black);
     user-select: none;
-    
-    /* REMOVED fixed width/height (512px). 
-       The JS sets the grid columns, so the div will size itself naturally. */
+
+    /* No fixed width/height here on purpose: the JS sets grid-template-columns,
+       so the div sizes itself from its cell children. */
     flex-shrink: 0;
 }
 
 .cell {
-    width: 32px;
-    height: 32px;
+    width: var(--cell-size);
+    height: var(--cell-size);
     display: flex;
     justify-content: center;
     align-items: center;
-    background: #fff;
-    border: 1px solid #ddd;
-    color: #000;
+    background: var(--color-white);
+    border: 1px solid var(--color-cell-border);
+    color: var(--color-black);
     cursor: pointer;
     font-weight: bold;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: var(--font-mono-cell);
     box-sizing: border-box;
     transition: background 0.2s;
-
     user-select: none;
 }
 
 .cell:hover {
-    background-color: #f0f0f0;
+    background-color: var(--color-cell-hover-bg);
 }
 
 .cell.revealed {
-    background: #eeeeee;
-    border: 1px solid #ccc;
+    background: var(--color-cell-revealed-bg);
+    border: 1px solid var(--color-cell-revealed-border);
 }
 
 .cell.mine {
-    background-color: #ff0033; 
-    color: white;
+    background-color: var(--color-mine);
+    color: var(--color-white);
 }
 
-/* Standard Minesweeper colors */
-.cell[data-num="1"] { color: blue; }
-.cell[data-num="2"] { color: green; }
-.cell[data-num="3"] { color: red; }
-.cell[data-num="4"] { color: darkblue; }
-.cell[data-num="5"] { color: brown; }
-.cell[data-num="6"] { color: cyan; }
-.cell[data-num="7"] { color: black; }
-.cell[data-num="8"] { color: gray; }
+/* Standard Minesweeper number colors, keyed off the JS-set data-num attribute */
+.cell[data-num="1"] { color: var(--color-num-1); }
+.cell[data-num="2"] { color: var(--color-num-2); }
+.cell[data-num="3"] { color: var(--color-num-3); }
+.cell[data-num="4"] { color: var(--color-num-4); }
+.cell[data-num="5"] { color: var(--color-num-5); }
+.cell[data-num="6"] { color: var(--color-num-6); }
+.cell[data-num="7"] { color: var(--color-num-7); }
+.cell[data-num="8"] { color: var(--color-num-8); }
 
 /* Footer */
 #footer_box {
-    background-color: #000;
-    color: #fff;
-    display: flex;            
+    background-color: var(--color-black);
+    color: var(--color-white);
+    display: flex;
     justify-content: space-between;
     align-items: stretch;
-    border-top: 4px solid #005ce6; 
+    border-top: 4px solid var(--color-accent);
     margin-top: 40px;
-    font-family: monospace;
     text-transform: uppercase;
     font-size: 0.85rem;
-    
+
     /* Ensure footer spans the full calculated width */
     min-width: 100%;
 }
 
-#left_footer_box, 
-#middle_footer_box, 
+#left_footer_box,
+#middle_footer_box,
 #right_footer_box {
-    flex: 1;                 
+    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-right: 1px solid #333; 
+    border-right: 1px solid var(--color-footer-divider);
     padding: 10px;
 }
 
 #right_footer_box {
-    border-right: none;      
+    border-right: none;
 }
 
 .detail_box {
     padding: 10px;
-    margin: 0;               
+    margin: 0;
     text-align: center;
 }
 
 .detail_box:hover {
-    color: #005ce6;
+    color: var(--color-accent);
     cursor: default;
 }

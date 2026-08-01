@@ -1,8 +1,8 @@
-document.addEventListener('DOMContentLoaded', () => {
-	const width_input = document.getElementById('width');
-	const length_input = document.getElementById('length');
-	const mines_input = document.getElementById('mines');
-	const max_mines_output = document.getElementById('max_mines');
+document.addEventListener("DOMContentLoaded", () => {
+	const width_input = document.getElementById("width");
+	const length_input = document.getElementById("length");
+	const mines_input = document.getElementById("mines");
+	const max_mines_output = document.getElementById("max_mines");
 
 	function update_parameters() {
 		let width = parseInt(width_input.value) || 0;
@@ -23,8 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
-	width_input.addEventListener('input', updateMaxMines);
-	length_input.addEventListener('input', updateMaxMines);
+	width_input.addEventListener("input", updateMaxMines);
+	length_input.addEventListener("input", updateMaxMines);
 
 	updateMaxMines();
 });

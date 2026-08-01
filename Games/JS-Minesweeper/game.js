@@ -1,5 +1,4 @@
 // --- Global Constants ---
-
 const GameState = Object.freeze({
     LOST: -1,
     NONE: 0,
@@ -18,8 +17,8 @@ const TileType = Object.freeze({
 });
 
 const game = {
-    length: 16,     
-    width: 16,  
+    length: 16,
+    width: 16,
     mines: 40,
     upperlayer: [],
     lowerlayer: [],
@@ -31,33 +30,36 @@ const game = {
 };
 
 // --- I/O ---
-
-const width_input = document.getElementById('width');
-const length_input = document.getElementById('length');
-const mines_input = document.getElementById('mines');
-const start_button = document.getElementById('start_button');
-const boardDiv = document.getElementById('board');
-const text_box_input = document.getElementById('game_text_box');
+const width_input = document.getElementById("width");
+const length_input = document.getElementById("length");
+const mines_input = document.getElementById("mines");
+const start_button = document.getElementById("start_button");
+const boardDiv = document.getElementById("board");
+const text_box_input = document.getElementById("game_text_box");
 
 // --- Interface ---
 
-start_button.addEventListener('click', main);
+start_button.addEventListener("click", main);
 
-boardDiv.addEventListener("contextmenu", (e) => e.preventDefault());
+boardDiv.addEventListener("contextmenu", (event) => event.preventDefault());
 
-boardDiv.addEventListener("mousedown", (e) => {
-    if (!e.target.classList.contains("cell")) return;
-    if (game.state !== GameState.NONE) return;
+boardDiv.addEventListener("mousedown", (event) => {
+    if (!event.target.classList.contains("cell")) {
+        return;
+    }
+    if (game.state !== GameState.NONE) {
+        return;
+    }
 
-    const x = parseInt(e.target.dataset.x);
-    const y = parseInt(e.target.dataset.y);
+    const x = parseInt(event.target.dataset.x);
+    const y = parseInt(event.target.dataset.y);
 
     // Left Click
-    if (e.button === 0) {
+    if (event.button === 0) {
         handle_left_click(x, y);
-    } 
+    }
     // Right Click
-    else if (e.button === 2) {
+    else if (event.button === 2) {
         handle_right_click(x, y);
     }
 });
@@ -71,7 +73,7 @@ function handle_left_click(x, y) {
         update_text_box("PLAYING");
     }
 
-    if (game.upperlayer[y][x] === CellState.FLAGGED || 
+    if (game.upperlayer[y][x] === CellState.FLAGGED ||
         game.upperlayer[y][x] === CellState.REVEALED) {
         return;
     }
@@ -87,7 +89,7 @@ function handle_left_click(x, y) {
         check_win_condition();
         update_text_box("PLAYING");
     }
-    
+
     render_grid();
 }
 
@@ -100,14 +102,18 @@ function handle_right_click(x, y) {
         game.upperlayer[y][x] = CellState.HIDDEN;
         game.remaing_mines++;
     }
+
     update_text_box("PLAYING - LEFT MINES: " +game.remaing_mines);
-    
     render_grid();
 }
 
 function propagate_reveal(x, y) {
-    if (x < 0 || x >= game.width || y < 0 || y >= game.length) return;
-    if (game.upperlayer[y][x] !== CellState.HIDDEN) return;
+    if (x < 0 || x >= game.width || y < 0 || y >= game.length) {
+        return;
+    }
+    if (game.upperlayer[y][x] !== CellState.HIDDEN) {
+        return;
+    }
 
     game.upperlayer[y][x] = CellState.REVEALED;
     game.safe_cells_remaining--;
@@ -140,18 +146,19 @@ function init_upper_layer(length, width) {
     for (let y = 0; y < length; y++) {
         const row_data = [];
         const row_dom = [];
-        
+
         for (let x = 0; x < width; x++) {
             row_data.push(CellState.HIDDEN);
-            
+
             const cell = document.createElement("div");
             cell.className = "cell";
             cell.dataset.x = x;
             cell.dataset.y = y;
             boardDiv.appendChild(cell);
-            
+
             row_dom.push(cell);
         }
+
         game.upperlayer.push(row_data);
         game.dom_grid.push(row_dom);
     }
@@ -159,9 +166,10 @@ function init_upper_layer(length, width) {
 
 function init_lower_layer(length, width, mines, safe_x, safe_y) {
     game.lowerlayer = [];
-    
+
     for (let y = 0; y < length; y++) {
         const row = new Array(width).fill(TileType.EMPTY);
+
         game.lowerlayer.push(row);
     }
 
@@ -170,9 +178,13 @@ function init_lower_layer(length, width, mines, safe_x, safe_y) {
         const rx = Math.floor(Math.random() * width);
         const ry = Math.floor(Math.random() * length);
 
-        if (game.lowerlayer[ry][rx] === TileType.MINE) continue;
-        
-        if (Math.abs(rx - safe_x) <= 1 && Math.abs(ry - safe_y) <= 1) continue;
+        if (game.lowerlayer[ry][rx] === TileType.MINE) {
+            continue;
+        }
+
+        if (Math.abs(rx - safe_x) <= 1 && Math.abs(ry - safe_y) <= 1) {
+            continue;
+        }
 
         game.lowerlayer[ry][rx] = TileType.MINE;
         placed++;
@@ -180,13 +192,18 @@ function init_lower_layer(length, width, mines, safe_x, safe_y) {
 
     for (let y = 0; y < length; y++) {
         for (let x = 0; x < width; x++) {
-            if (game.lowerlayer[y][x] === TileType.MINE) continue;
+            if (game.lowerlayer[y][x] === TileType.MINE) {
+                continue;
+            }
 
             let count = 0;
             const neighbors = get_neighbors(x, y, length, width);
             for (const [nx, ny] of neighbors) {
-                if (game.lowerlayer[ny][nx] === TileType.MINE) count++;
+                if (game.lowerlayer[ny][nx] === TileType.MINE) {
+                    count++;
+                }
             }
+
             game.lowerlayer[y][x] = count;
         }
     }
@@ -197,9 +214,10 @@ function init_lower_layer(length, width, mines, safe_x, safe_y) {
 function get_neighbors(x, y, length, width) {
     const offsets = [
         [-1,-1], [-1,0], [-1,1],
-        [0,-1],          [0,1],
-        [1,-1], [1,0], [1,1]
+        [ 0,-1],         [ 0,1],
+        [ 1,-1], [ 1,0], [ 1,1]
     ];
+
     const result = [];
     for (const [dx, dy] of offsets) {
         const nx = x + dx;
@@ -208,6 +226,7 @@ function get_neighbors(x, y, length, width) {
             result.push([nx, ny]);
         }
     }
+
     return result;
 }
 
@@ -246,17 +265,17 @@ function render_grid() {
             if (cellState === CellState.FLAGGED) {
                 cellElement.textContent = "f";
                 cellElement.classList.add("flagged");
-            } 
+            }
             else if (cellState === CellState.REVEALED) {
                 cellElement.classList.add("revealed");
 
                 if (cellValue === TileType.MINE) {
                     cellElement.textContent = "¤";
                     cellElement.classList.add("mine");
-                } 
+                }
                 else if (cellValue > 0) {
                     cellElement.textContent = cellValue;
-                    cellElement.setAttribute("data-num", cellValue); 
+                    cellElement.setAttribute("data-num", cellValue);
                 }
             }
         }
@@ -273,9 +292,9 @@ function update_parameters() {
     let width = parseInt(width_input.value) || 16;
     let length = parseInt(length_input.value) || 16;
     let mines = parseInt(mines_input.value) || 40;
-    
+
     if (mines >= width * length) mines = Math.floor((width * length) / 4);
-    
+
     return [width, length, mines];
 }
 
@@ -287,10 +306,12 @@ function reset() {
 
 function main() {
     reset();
+
     [game.width, game.length, game.mines] = update_parameters();
+
     game.safe_cells_remaining = (game.width * game.length) - game.mines;
     game.remaing_mines = game.mines;
-    
+
     init_upper_layer(game.length, game.width);
 }
 
