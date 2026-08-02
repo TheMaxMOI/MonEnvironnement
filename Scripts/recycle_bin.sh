@@ -93,24 +93,27 @@ getName () {
 
 upperPOW2 () {
     pow=1
-    while [ "$pow" -le "$len" ]; do
+    while [ "$pow" -le "$1" ]; do
         pow=$((pow*2))
     done
 
     echo "$pow"
 }
 
-pad () { # Do not forget to quote the result !
+pad () { # $1 = str, $2 = maxPad # Do not forget to quote the result !
     len=${#1}
-    upperLen=$(upperPOW2 "$len")
 
     echo -n "$1"
 
     i=$len
-    while [ "$i" -lt "$upperLen" ]; do
+    while [ "$i" -lt "$2" ]; do
         echo -n " "
         i=$((i+1))
     done
+}
+
+padPOW2 () {
+    pad "$1" "$(upperPOW2 "${#1}")"
 }
 
 char_at () { # $1 = str, $2 = idx
@@ -185,7 +188,7 @@ trunc () { # $1 = len, $2 = str
 getIdx () {
     i=-1
     while IFS= read -r line || [ -n "$line" ]; do
-        if [ $(startLike "$1" "$line") -eq 0 ]; then 
+        if [ $(startLike "$1" "$line") -eq 0 ]; then
             idx="$(trunc "${#1}" $(split "$line" ";" 1))"
             if [ "$idx" -gt "$i" ]; then
                 i="$idx"
@@ -218,7 +221,7 @@ getIdxCached () {
 saveFileToBin () { # $1 = pathname, $2 = newName
     filename=$(getName "$1")
 
-    line=$(concat "$(pad "$2")" ";" "$(pad "$filename")" ";" "$1") # no need to pad the last one
+    line=$(concat "$(padPOW2 "$2")" ";" "$(padPOW2 "$filename")" ";" "$1") # no need to pad the last one
     echo "$line" >> "$TABLE"
 }
 
@@ -263,7 +266,7 @@ delete () {
             fi
 
             moved="$(renameAndMoveToBin "$path" "$newName")"
-            if [ ! "$moved" -eq 0 ]; then 
+            if [ ! "$moved" -eq 0 ]; then
                 continue
             fi
 
@@ -290,6 +293,20 @@ path () {
 
 tip () {
     echo "Try \`$0 --help'"
+}
+
+info () {
+    echo "$BIN:"
+    echo ""
+    isEmpty=0
+    while IFS= read -r line || [ -n "$line" ]; do
+        isEmpty=1
+        echo "$(pad "$(concat "$(split "$line" ";" 2)" " ")" "${#BIN}") from $(split "$line" ";" 3)"
+    done < $TABLE
+
+    if [ "$isEmpty" -eq 0 ]; then
+        echo "The bin is empty"
+    fi
 }
 
 if [ ! -d "$DIR" ]; then
@@ -323,7 +340,8 @@ case "$1" in
         exit 0
     ;;
     info)
-        ls -a $BIN # replace me
+        # ls -a $BIN # replace me
+        info
         exit 0
     ;;
     path)
