@@ -11,6 +11,8 @@ BIN="$DIR/.trash"
 
 TABLE="$BIN/IAmTheTable"
 NONE="/dev/null"
+DIR_IDX=""
+FILE_IDX=""
 
 getAbsolutePath() {
     path=$1
@@ -98,7 +100,7 @@ upperPOW2 () {
     echo "$pow"
 }
 
-pad () {
+pad () { # Do not forget to quote the result !
     len=${#1}
     upperLen=$(upperPOW2 "$len")
 
@@ -194,15 +196,31 @@ getIdx () {
     echo "$((i+1))"
 }
 
+getIdxCached () {
+    i=0
+    if [ "$1" = "file" ] && [ -n "$FILE_IDX" ]; then
+        i="$((FILE_IDX+1))"
+    else if [ "$1" = "dir" ] && [ -n "$DIR_IDX" ]; then
+        i="$((DIR_IDX+1))"
+    else
+        i=$(getIdx "$1")
+    fi fi
+
+    if [ "$1" = "file" ]; then
+        FILE_IDX="$i"
+    else if [ "$1" = "dir" ]; then
+        DIR_IDX="$i"
+    fi fi
+
+    echo "$i"
+}
+
 saveFileToBin () { # $1 = pathname, $2 = fileOrDir
     filename=$(getName "$1")
 
-    if [ ! "$2" = "file" ] && [ ! "$2" = "dir" ]; then
-        echo "Dev internal error"
-    fi
+    i="$(getIdxCached "$2")"
 
-    i=$(getIdx "$2")
-    line=$(concat $(pad "$2$i") ";" $(pad "$filename") ";" "$1") # no need to pad the last one
+    line=$(concat "$(pad "$2$i")" ";" "$(pad "$filename")" ";" "$1") # no need to pad the last one
     echo "$line" >> "$TABLE"
 
     echo "$2$i"
@@ -217,19 +235,27 @@ delete () {
     for file in "$@"; do
         noFile=1
         path="$(getAbsolutePath "$file")"
+
+        if [ "$path" = "$TABLE" ] || [ "$path" = "$BIN" ]; then
+            echo "Deleting $file is forbidden!"
+            continue
+        fi
+
         if [ -e "$path" ]; then
-            echo mv $path $BIN
-            moved=0 #$(mv "$path" "$BIN" > "$NONE" 2>&1; echo $?)
+            isDir=$([ -d "$path" ]; echo $?)
+            moved=$(mv "$path" "$BIN" > "$NONE" 2>&1; echo $?)
             if [ ! "$moved" -eq 0 ]; then 
                 continue
             fi
-            if [ -d "$path" ]
-            then
+
+            echo "Moved $file to the bin"
+
+            if [ "$isDir" -eq 0 ]; then
                 newName=$(saveFileToBin "$path" "dir")
-                echo mv "$BIN/$(getName "$path")" "$BIN/$newName"
+                mv "$BIN/$(getName "$path")" "$BIN/$newName"
             else
                 newName=$(saveFileToBin "$path" "file")
-                echo mv "$BIN/$(getName "$path")" "$BIN/$newName"
+                mv "$BIN/$(getName "$path")" "$BIN/$newName"
             fi
         else
             echo "User tried to delete a none existing file at $file"
