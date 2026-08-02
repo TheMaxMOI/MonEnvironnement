@@ -233,7 +233,7 @@ renameAndMoveToBin () { # $1 = path, $2 = newName
     mkdir "$tmpDir"
     [ "$(mv "$1" "$tmpDir" > "$NONE" 2>&1; echo $?)" -eq 0 ] &&
     [ "$(mv "$tmpDir/$(getName "$1")" "$tmpDir/$2" > "$NONE" 2>&1; echo $?)" -eq 0 ] &&
-    [ "$(mv "$tmpDir/$2" "$BIN" > "$NONE" 2>&1; echo $?)" -eq 1 ] &&
+    [ "$(mv "$tmpDir/$2" "$BIN" > "$NONE" 2>&1; echo $?)" -eq 0 ] &&
     echo 0 || echo 1
     rmdir "$tmpDir"
 }
