@@ -215,15 +215,27 @@ getIdxCached () {
     echo "$i"
 }
 
-saveFileToBin () { # $1 = pathname, $2 = fileOrDir
+saveFileToBin () { # $1 = pathname, $2 = newName
     filename=$(getName "$1")
 
-    i="$(getIdxCached "$2")"
-
-    line=$(concat "$(pad "$2$i")" ";" "$(pad "$filename")" ";" "$1") # no need to pad the last one
+    line=$(concat "$(pad "$2")" ";" "$(pad "$filename")" ";" "$1") # no need to pad the last one
     echo "$line" >> "$TABLE"
+}
 
-    echo "$2$i"
+
+getNewName () { # $1 = fileOrDir
+    i="$(getIdxCached "$1")"
+    echo "$1$i"
+}
+
+renameAndMoveToBin () { # $1 = path, $2 = newName
+    tmpDir="$BIN/.tmp"
+    mkdir "$tmpDir"
+    [ "$(mv "$1" "$tmpDir" > "$NONE" 2>&1; echo $?)" -eq 0 ] &&
+    [ "$(mv "$tmpDir/$(getName "$1")" "$tmpDir/$2" > "$NONE" 2>&1; echo $?)" -eq 0 ] &&
+    [ "$(mv "$tmpDir/$2" "$BIN" > "$NONE" 2>&1; echo $?)" -eq 1 ] &&
+    echo 0 || echo 1
+    rmdir "$tmpDir"
 }
 
 delete () {
@@ -243,20 +255,21 @@ delete () {
 
         if [ -e "$path" ]; then
             isDir=$([ -d "$path" ]; echo $?)
-            moved=$(mv "$path" "$BIN" > "$NONE" 2>&1; echo $?)
+
+            if [ "$isDir" -eq 0 ]; then
+                newName=$(getNewName "dir")
+            else
+                newName=$(getNewName "file")
+            fi
+
+            moved="$(renameAndMoveToBin "$path" "$newName")"
             if [ ! "$moved" -eq 0 ]; then 
                 continue
             fi
 
             echo "Moved $file to the bin"
 
-            if [ "$isDir" -eq 0 ]; then
-                newName=$(saveFileToBin "$path" "dir")
-                mv "$BIN/$(getName "$path")" "$BIN/$newName"
-            else
-                newName=$(saveFileToBin "$path" "file")
-                mv "$BIN/$(getName "$path")" "$BIN/$newName"
-            fi
+            saveFileToBin "$path" "$newName"
         else
             echo "User tried to delete a none existing file at $file"
         fi
