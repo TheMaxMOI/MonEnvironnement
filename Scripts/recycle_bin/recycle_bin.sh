@@ -66,18 +66,20 @@ getIdx () {
         fi
     done < $TABLE
 
-    echo "$((i+1))"
+    echo "$i"
 }
 
 getIdxCached () {
     i=0
     if [ "$1" = "file" ] && [ -n "$FILE_IDX" ]; then
-        i="$((FILE_IDX+1))"
+        i="${FILE_IDX}"
     else if [ "$1" = "dir" ] && [ -n "$DIR_IDX" ]; then
-        i="$((DIR_IDX+1))"
+        i="${DIR_IDX}"
     else
         i=$(getIdx "$1")
     fi fi
+
+    i=$((i+1))
 
     if [ "$1" = "file" ]; then
         FILE_IDX="$i"
