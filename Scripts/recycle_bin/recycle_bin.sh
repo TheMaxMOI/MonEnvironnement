@@ -6,14 +6,14 @@ SCRIPT_DIR=$(dirname "$0")
 . "$SCRIPT_DIR/path.sh"
 . "$SCRIPT_DIR/string.sh"
 
-### === PROGRAM ===
-
 # === Global Vars ===
 
 TABLE="$BIN/IAmTheTable"
 NONE="/dev/null"
 DIR_IDX=""
 FILE_IDX=""
+
+
 
 help () {
     echo "This script allows one to have a recycle bin rather than definitive deletation aka rm."
@@ -116,9 +116,7 @@ delete () {
         createBin
     fi
 
-    noFile=0
     for file in "$@"; do
-        noFile=1
         path="$(getAbsolutePath "$file")"
 
         if [ "$path" = "$TABLE" ] || [ "$path" = "$BIN" ]; then
@@ -148,7 +146,7 @@ delete () {
         fi
     done
 
-    if [ "$noFile" -eq 0 ]; then
+    if [ "$#" -eq 0 ]; then
         echo "User did not provided any file!"
     fi
 }
@@ -179,6 +177,81 @@ info () {
     fi
 }
 
+isIn () { # $1 = elm, $2 = list
+    answered=1
+    for elm in $2;do
+        if [ "$elm" = "$1" ]; then
+            echo 0
+            answered=0
+            break
+        fi
+    done
+
+    if [ "$answered" -eq 1 ]; then
+        echo 1
+    fi
+}
+
+renameAndMoveToDest () { # $1 = currentName, $2 = name, $3 = dest
+    tmpDir="$BIN/.tmp"
+    mkdir "$tmpDir"
+    [ "$(mv "$BIN/$1" "$tmpDir" > "$NONE" 2>&1; echo $?)" -eq 0 ] &&
+    [ "$(mv "$tmpDir/$1" "$tmpDir/$2" > "$NONE" 2>&1; echo $?)" -eq 0 ] &&
+    [ "$(mv "$tmpDir/$2" "$3" > "$NONE" 2>&1; echo $?)" -eq 0 ] &&
+    echo 0 || echo 1
+    rmdir "$tmpDir"
+}
+
+restore () {
+    if [ $(isBinAlive) -eq 1 ]; then
+        echo "The bin was not found!"
+        exit 1
+    fi
+
+    if [ ! "$#" -eq 0 ]; then
+        processed=""
+        lines=""
+        i=1
+
+        while IFS= read -r line || [ -n "$line" ]; do
+            name="$(trim "$(split "$line" ";" 2)")"
+
+            if [ "$(isIn "$name" "$processed")" = 0 ]; then
+                i=$((i+1))
+                continue
+            fi
+
+            for file in "$@"; do
+                if [ "$name" = "$file" ]; then
+                    currentName="$(trim "$(split "$line" ";" 1)")"
+                    dest="$(split "$line" ";" 3)"
+
+                    echo "Restoring $name to $dest"
+
+                    success=$(renameAndMoveToDest "$currentName" "$name" "$dest")
+                    if [ "$success" -eq 1 ]; then
+                        echo "Fatal Error: Failed to restore $name to $dest!"
+                        echo "One must restore it manually"
+                        exit 1
+                    fi
+
+                    processed="${processed} ${file}"
+                    lines="$i ${lines}"
+                fi
+            done
+
+            i=$((i+1))
+        done < $TABLE
+
+        for idx in $lines; do
+            sed -i "${idx}d" "$TABLE"
+        done
+
+    else
+        echo "User did not provided any file!"
+    fi
+}
+
 if [ ! -d "$DIR" ]; then
     echo "The specified directory was not found!"
     exit 1
@@ -202,7 +275,7 @@ case "$1" in
     ;;
     restore)
         shift
-        # restore "$@"
+        restore "$@"
         exit 0
     ;;
     empty)

@@ -92,3 +92,37 @@ trunc () { # $1 = len, $2 = str
     done
 }
 
+trim () { # $1 = str
+    len="${#1}"
+    i=1
+    j="$len"
+    while [ "$i" -lt "$j" ] ; do
+        moved=1
+        begin="$(char_at "$1" "$i")"
+        end="$(char_at "$1" "$j")"
+        if [ "$begin" = " " ]; then
+            i=$((i+1))
+            moved=0
+        fi
+        if [ "$end" = " " ]; then
+            j=$((j-1))
+            moved=0
+        fi
+        if [ "$moved" -eq 1 ]; then
+            break
+        fi
+    done
+
+    if [ "$i" -eq "$j" ]; then
+        c="$(char_at "$1" "$i")"
+        if [ "$c" != " " ]; then
+            echo -n "$c"
+        fi
+    else
+        while [ "$i" -le "$j" ]; do
+            echo -n "$(char_at "$1" "$i")"
+            i=$((i+1))
+        done
+    fi
+
+}
