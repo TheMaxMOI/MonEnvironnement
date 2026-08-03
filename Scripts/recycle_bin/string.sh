@@ -1,19 +1,23 @@
 pad () { # $1 = str, $2 = maxPad # Do not forget to quote the result !
-    len=${#1}
+    diff=$(( $2 - ${#1} ))
+    space=" "
 
-    echo -n "$1"
-
-    i=$len
-    while [ "$i" -lt "$2" ]; do
-        echo -n " "
-        i=$((i+1))
+    res="$1"
+    while [ "$diff" -gt 0 ]; do
+        if [ $(( diff % 2 )) -eq 1 ]; then
+            res="$res$space"
+        fi
+        space="$space$space"
+        diff=$(( diff / 2 ))
     done
+
+    echo -n "$res"
 }
 
 upperPOW2 () {
     pow=1
     while [ "$pow" -le "$1" ]; do
-        pow=$((pow*2))
+        pow=$((pow << 1))
     done
 
     echo "$pow"
@@ -27,7 +31,7 @@ char_at () { # $1 = str, $2 = idx
     if [ "$2" -le 0 ]; then
         echo ""
     else
-        echo "$(echo "$1" | cut -c "$2")"
+        echo "$1" | cut -c "$2"
     fi
 }
 
@@ -54,32 +58,21 @@ split () { # $1 = str, $2 = char, $3 = ith occurence
 }
 
 concat () {
+    growingString=""
     for i in "$@"; do
-        echo -n "$i"
+        growingString="${growingString}$i"
     done
+    echo -n "${growingString}"
 }
 
 startLike () { # $1 = prefix, $2 = str
-    len1=${#1}
-    len2=${#2}
-    if [ "$len1" -gt "$len2" ]; then
-        echo 1
-    else
-        i=1
-        answered=1
-        while [ "$i" -le "$len1" ]; do
-            if [ "$(char_at "$1" "$i")" != "$(char_at "$2" "$i")" ]; then
-                echo 1
-                answered=0
-                break
-            fi
-            i=$((i+1))
-        done
-
-        if [ "$answered" -eq 1 ]; then
+    case "$2" in
+        "$1"*)
             echo 0
-        fi
-    fi
+         ;;
+         *)
+            echo 1
+    esac
 }
 
 trunc () { # $1 = len, $2 = str
@@ -124,5 +117,5 @@ trim () { # $1 = str
             i=$((i+1))
         done
     fi
-
 }
+

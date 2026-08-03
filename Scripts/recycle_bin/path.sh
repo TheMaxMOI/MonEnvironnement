@@ -13,6 +13,7 @@ getAbsolutePath() {
     IFS=/
     set -- $path
     IFS=$saved_IFS
+
     out=""
     for part do
         case "$part" in
@@ -32,6 +33,6 @@ getAbsolutePath() {
 }
 
 getName () {
-    echo $(basename $1)
+    basename "$1"
 }
 

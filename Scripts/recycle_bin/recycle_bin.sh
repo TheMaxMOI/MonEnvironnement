@@ -22,6 +22,7 @@ help () {
     echo " - delete,  moves the specified files to the bin."
     echo "            Fail if no files are provided or mv issues"
     echo " - info,    list bin's location and the files contained in the bin."
+    echo " - path,    show the bin location."
     echo " - restore, moves back the files from where they were deleted."
     echo "            Fail if no files are provided or mv issues"
     echo " - empty,   removes all files contained in the bin."
@@ -106,9 +107,9 @@ getNewName () { # $1 = fileOrDir
 renameAndMoveToBin () { # $1 = path, $2 = newName
     tmpDir="$BIN/.tmp"
     mkdir "$tmpDir"
-    [ "$(mv "$1" "$tmpDir" > "$NONE" 2>&1; echo $?)" -eq 0 ] &&
-    [ "$(mv "$tmpDir/$(getName "$1")" "$tmpDir/$2" > "$NONE" 2>&1; echo $?)" -eq 0 ] &&
-    [ "$(mv "$tmpDir/$2" "$BIN" > "$NONE" 2>&1; echo $?)" -eq 0 ] &&
+    mv "$1" "$tmpDir" > "$NONE" 2>&1  &&
+    mv "$tmpDir/$(getName "$1")" "$tmpDir/$2" > "$NONE" 2>&1 &&
+    mv "$tmpDir/$2" "$BIN" > "$NONE" 2>&1 &&
     echo 0 || echo 1
     rmdir "$tmpDir"
 }
@@ -197,9 +198,9 @@ isIn () { # $1 = elm, $2 = list
 renameAndMoveToDest () { # $1 = currentName, $2 = name, $3 = dest
     tmpDir="$BIN/.tmp"
     mkdir "$tmpDir"
-    [ "$(mv "$BIN/$1" "$tmpDir" > "$NONE" 2>&1; echo $?)" -eq 0 ] &&
-    [ "$(mv "$tmpDir/$1" "$tmpDir/$2" > "$NONE" 2>&1; echo $?)" -eq 0 ] &&
-    [ "$(mv "$tmpDir/$2" "$3" > "$NONE" 2>&1; echo $?)" -eq 0 ] &&
+    mv "$BIN/$1" "$tmpDir" > "$NONE" 2>&1 &&
+    mv "$tmpDir/$1" "$tmpDir/$2" > "$NONE" 2>&1 &&
+    mv "$tmpDir/$2" "$3" > "$NONE" 2>&1 &&
     echo 0 || echo 1
     rmdir "$tmpDir"
 }
