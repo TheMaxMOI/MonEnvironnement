@@ -36,3 +36,6 @@ getName () {
     basename "$1"
 }
 
+getFold () {
+    dirname "$1"
+}

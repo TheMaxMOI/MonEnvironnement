@@ -195,14 +195,23 @@ isIn () { # $1 = elm, $2 = list
     fi
 }
 
-renameAndMoveToDest () { # $1 = currentName, $2 = name, $3 = dest
-    tmpDir="$BIN/.tmp"
-    mkdir "$tmpDir"
-    mv "$BIN/$1" "$tmpDir" > "$NONE" 2>&1 &&
-    mv "$tmpDir/$1" "$tmpDir/$2" > "$NONE" 2>&1 &&
-    mv "$tmpDir/$2" "$3" > "$NONE" 2>&1 &&
-    echo 0 || echo 1
-    rmdir "$tmpDir"
+renameAndMoveToDest () { # $3 = currentName, $2 = name, $3 = dest # return 0 on success, 1 on error, 2 if skip
+    fold="$(getFold "$3")"
+    if [ ! -e "$fold" ]; then
+        echo "Destination folder $fold doesn't exist anymore." >&2
+        echo 2
+    else if [ -e "$3" ]; then
+        echo "$3 already exists preventing of restoring $2." >&2
+        echo 2
+    else
+        tmpDir="$BIN/.tmp"
+        mkdir "$tmpDir"
+        mv "$BIN/$1" "$tmpDir" > "$NONE" 2>&1 &&
+        mv "$tmpDir/$1" "$tmpDir/$2" > "$NONE" 2>&1 &&
+        mv "$tmpDir/$2" "$3" > "$NONE" 2>&1 &&
+        echo 0 || echo 1
+        rmdir "$tmpDir"
+    fi fi
 }
 
 restore () {
@@ -231,15 +240,20 @@ restore () {
 
                     echo "Restoring $name to $dest"
 
-                    success=$(renameAndMoveToDest "$currentName" "$name" "$dest")
-                    if [ "$success" -eq 1 ]; then
+                    code=$(renameAndMoveToDest "$currentName" "$name" "$dest")
+                    if [ "$code" -eq 1 ]; then
                         echo "Fatal Error: Failed to restore $name to $dest!"
                         echo "One must restore it manually"
                         exit 1
-                    fi
+                    else if [ "$code" -eq 2 ]; then
+                        # skip registering processed file and line
+                        continue
+                    else
+                        processed="${processed} ${file}"
+                        lines="$i ${lines}"
+                    fi fi
 
-                    processed="${processed} ${file}"
-                    lines="$i ${lines}"
+
                 fi
             done
 
