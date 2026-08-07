@@ -36,10 +36,6 @@ isBinAlive () {
     fi
 }
 
-emptyFileAt () { # $1 = path
-    echo "" > "$1"
-}
-
 createBin () {
     if [ $(isBinAlive) -eq 0 ]; then
         echo "Bin already exist at $BIN"
@@ -73,7 +69,7 @@ getIdx () {
                 i="$idx"
             fi
         fi
-    done < $TABLE
+    done < "$TABLE"
 
     echo "$i"
 }
@@ -120,10 +116,10 @@ renameAndMoveToBin () { # $1 = path, $2 = newName
         tmpDir="$BIN/.tmp"
         mkdir "$tmpDir" > "$NONE" 2>&1
         if [ ! -d "$tmpDir" ]; then
-            echo "Internal error"
+            echo "Internal error" >&2
             echo 1
         else
-            name="$(getName $1)"
+            name="$(getName "$1")"
             if mv "$1" "$tmpDir" > "$NONE" 2>&1  &&
                mv "$tmpDir/$name" "$tmpDir/$2" > "$NONE" 2>&1 &&
                mv "$tmpDir/$2" "$BIN" > "$NONE" 2>&1
@@ -131,7 +127,7 @@ renameAndMoveToBin () { # $1 = path, $2 = newName
                 rmdir "$tmpDir" > "$NONE" 2>&1
                 echo 0
             else
-                echo "Internal error - restoring file ${name} to the source"
+                echo "Internal error - restoring file ${name} to the source" >&2
 
                 if [ -e "$tmpDir/$2" ]; then
                     mv "$tmpDir/$2" "$1" > "$NONE" 2>&1
@@ -161,6 +157,12 @@ delete () {
         fi
 
         path="$(getAbsolutePath "$file")"
+
+        if [ "$(hasSemiColon "$path")" -eq 0 ]; then
+            echo "The bin reject all paths containing \`;'"
+            echo "triggered by $path"
+            continue
+        fi
 
         if [ "$path" = "$TABLE" ] || [ "$path" = "$BIN" ]; then
             echo "Deleting $file is forbidden!"
@@ -228,7 +230,7 @@ info () {
     while IFS= read -r line || [ -n "$line" ]; do
         isEmpty=1
         fmt "$(getType "$line")" "$(split "$line" ";" 2)" "$(split "$line" ";" 3)"
-    done < $TABLE
+    done < "$TABLE"
 
     if [ "$isEmpty" -eq 0 ]; then
         echo "The bin is empty"
@@ -328,7 +330,7 @@ restore () {
             done
 
             i=$((i+1))
-        done < $TABLE
+        done < "$TABLE"
 
         for idx in $lines; do
             sed -i "${idx}d" "$TABLE"
