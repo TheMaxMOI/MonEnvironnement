@@ -119,3 +119,6 @@ trim () { # $1 = str
     fi
 }
 
+first () { # $1 = str
+    char_at "$1" 1
+}

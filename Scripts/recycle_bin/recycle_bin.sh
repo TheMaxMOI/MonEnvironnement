@@ -166,13 +166,28 @@ tip () {
     echo "Try \`$0 --help'"
 }
 
+fmt () { # $1 = type, $2 = name, $3 = path
+    echo "$(pad "$(concat "$1: " "$2" " ")" "${#BIN}") from $3"
+}
+
+getType () { # $1 = line
+    char="$(first "$1")"
+    if [ "$char" = "f" ]; then
+        echo "F"
+    else if [ "$char" = "d" ]; then
+        echo "D"
+    else
+        echo "U"
+    fi fi
+}
+
 info () {
     echo "$BIN:"
     echo ""
     isEmpty=0
     while IFS= read -r line || [ -n "$line" ]; do
         isEmpty=1
-        echo "$(pad "$(concat "$(split "$line" ";" 2)" " ")" "${#BIN}") from $(split "$line" ";" 3)"
+        fmt "$(getType "$line")" "$(split "$line" ";" 2)" "$(split "$line" ";" 3)"
     done < $TABLE
 
     if [ "$isEmpty" -eq 0 ]; then
