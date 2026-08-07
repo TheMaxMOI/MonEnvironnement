@@ -1,0 +1,43 @@
+getAbsolutePath() {
+    path=$1
+    case "$path" in
+        /*)
+            ;;
+
+        *)
+            path=$(pwd -P)/$path
+            ;;
+    esac
+
+    saved_IFS=$IFS
+    set -f
+    IFS=/
+    set -- $path
+    IFS=$saved_IFS
+    set +f
+
+    out=""
+    for part do
+        case "$part" in
+            ""|.)
+                continue
+                ;;
+            ..)
+                out=${out%/*}
+                ;;
+            *)
+                out=$out/$part
+                ;;
+        esac
+    done
+
+    echo "${out:-/}"
+}
+
+getName () {
+    basename "$1"
+}
+
+getFold () {
+    dirname "$1"
+}
