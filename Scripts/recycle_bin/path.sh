@@ -10,9 +10,11 @@ getAbsolutePath() {
     esac
 
     saved_IFS=$IFS
+    set -f
     IFS=/
     set -- $path
     IFS=$saved_IFS
+    set +f
 
     out=""
     for part do

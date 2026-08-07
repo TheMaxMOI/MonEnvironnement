@@ -122,3 +122,21 @@ trim () { # $1 = str
 first () { # $1 = str
     char_at "$1" 1
 }
+
+hasChar () { # $1 = str, $2 = char
+    len=${#1}
+    i=1
+    answered=1
+    while [ "$i" -le "$len" ]; do
+        if [ "$(char_at "$1" "$i")" = "$2" ]; then
+            echo 0
+            answered=0
+            break
+        fi
+        i=$((i+1))
+    done
+
+    if [ "$answered" -eq 1 ]; then
+        echo 1
+    fi
+}

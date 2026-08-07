@@ -1,4 +1,4 @@
-#/bin/sh
+#!/bin/sh
 
 SCRIPT_DIR=$(dirname "$0")
 ### === IMPORTS ===
@@ -36,6 +36,10 @@ isBinAlive () {
     fi
 }
 
+emptyFileAt () { # $1 = path
+    echo "" > "$1"
+}
+
 createBin () {
     if [ $(isBinAlive) -eq 0 ]; then
         echo "Bin already exist at $BIN"
@@ -48,12 +52,16 @@ createBin () {
 
 empty () {
     if [ $(isBinAlive) -eq 0 ]; then
-        rm -rf "$BIN"/* "$BIN"/.*
+        find "$BIN" -mindepth 1 -exec rm -rf {} +
         touch -- "$TABLE"
         echo "Bin has been emptied"
     else
         echo "Bin does not exist!"
     fi
+}
+
+hasSemiColon () { # $1 = file
+   hasChar "$1" ";"
 }
 
 getIdx () {
@@ -105,13 +113,39 @@ getNewName () { # $1 = fileOrDir
 }
 
 renameAndMoveToBin () { # $1 = path, $2 = newName
-    tmpDir="$BIN/.tmp"
-    mkdir "$tmpDir"
-    mv "$1" "$tmpDir" > "$NONE" 2>&1  &&
-    mv "$tmpDir/$(getName "$1")" "$tmpDir/$2" > "$NONE" 2>&1 &&
-    mv "$tmpDir/$2" "$BIN" > "$NONE" 2>&1 &&
-    echo 0 || echo 1
-    rmdir "$tmpDir"
+    if [ -e "$BIN/$2" ]; then
+        echo "Internal error - the bin could not delete $1" >&2
+        echo 1
+    else
+        tmpDir="$BIN/.tmp"
+        mkdir "$tmpDir" > "$NONE" 2>&1
+        if [ ! -d "$tmpDir" ]; then
+            echo "Internal error"
+            echo 1
+        else
+            name="$(getName $1)"
+            if mv "$1" "$tmpDir" > "$NONE" 2>&1  &&
+               mv "$tmpDir/$name" "$tmpDir/$2" > "$NONE" 2>&1 &&
+               mv "$tmpDir/$2" "$BIN" > "$NONE" 2>&1
+            then
+                rmdir "$tmpDir" > "$NONE" 2>&1
+                echo 0
+            else
+                echo "Internal error - restoring file ${name} to the source"
+
+                if [ -e "$tmpDir/$2" ]; then
+                    mv "$tmpDir/$2" "$1" > "$NONE" 2>&1
+                else if [ -e "$tmpDir/$name" ]; then
+                    mv "$tmpDir/$name" "$1" > "$NONE" 2>&1
+                fi fi
+
+                rmdir "$tmpDir" > "$NONE" 2>&1
+                echo 1
+            fi
+
+        fi
+
+    fi
 }
 
 delete () {
@@ -120,6 +154,12 @@ delete () {
     fi
 
     for file in "$@"; do
+        if [ "$(hasSemiColon "$file")" -eq 0 ]; then
+            echo "The bin reject all files containing \`;'"
+            echo "triggered by $file"
+            continue
+        fi
+
         path="$(getAbsolutePath "$file")"
 
         if [ "$path" = "$TABLE" ] || [ "$path" = "$BIN" ]; then
@@ -210,7 +250,7 @@ isIn () { # $1 = elm, $2 = list
     fi
 }
 
-renameAndMoveToDest () { # $3 = currentName, $2 = name, $3 = dest # return 0 on success, 1 on error, 2 if skip
+renameAndMoveToDest () { # $1 = currentName, $2 = name, $3 = dest # return 0 on success, 1 on error, 2 if skip
     fold="$(getFold "$3")"
     if [ ! -e "$fold" ]; then
         echo "Destination folder $fold doesn't exist anymore." >&2
@@ -220,12 +260,27 @@ renameAndMoveToDest () { # $3 = currentName, $2 = name, $3 = dest # return 0 on 
         echo 2
     else
         tmpDir="$BIN/.tmp"
-        mkdir "$tmpDir"
-        mv "$BIN/$1" "$tmpDir" > "$NONE" 2>&1 &&
-        mv "$tmpDir/$1" "$tmpDir/$2" > "$NONE" 2>&1 &&
-        mv "$tmpDir/$2" "$3" > "$NONE" 2>&1 &&
-        echo 0 || echo 1
-        rmdir "$tmpDir"
+        mkdir "$tmpDir" > "$NONE" 2>&1
+        if [ ! -d "$tmpDir" ]; then
+            echo 1
+        else if mv "$BIN/$1" "$tmpDir" > "$NONE" 2>&1 &&
+                mv "$tmpDir/$1" "$tmpDir/$2" > "$NONE" 2>&1 &&
+                mv "$tmpDir/$2" "$3" > "$NONE" 2>&1
+        then
+            rmdir "$tmpDir" > "$NONE" 2>&1
+            echo 0
+        else
+            echo "Internal error - restoring file $2 to its bin location"
+
+            if [ -e "$tmpDir/$2" ]; then
+                mv "$tmpDir/$2" "$BIN/$1" > "$NONE" 2>&1
+            elif [ -e "$tmpDir/$1" ]; then
+                mv "$tmpDir/$1" "$BIN/$1" > "$NONE" 2>&1
+            fi
+
+            rmdir "$tmpDir" > "$NONE" 2>&1
+            echo 1
+        fi fi
     fi fi
 }
 
