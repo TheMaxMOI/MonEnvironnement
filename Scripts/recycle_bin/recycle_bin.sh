@@ -224,6 +224,9 @@ getType () { # $1 = line
 }
 
 info () {
+    if [ $(isBinAlive) -eq 1 ]; then
+        echo "The bin will be create at $BIN"
+    else
     echo "$BIN:"
     echo ""
     isEmpty=0
@@ -234,6 +237,7 @@ info () {
 
     if [ "$isEmpty" -eq 0 ]; then
         echo "The bin is empty"
+    fi
     fi
 }
 
