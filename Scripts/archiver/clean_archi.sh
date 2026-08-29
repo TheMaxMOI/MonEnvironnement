@@ -1,8 +1,9 @@
 #!/bin/sh
 
-# --- USER SETTINGS ---
+SCRIPT_DIR=$(dirname "$0")
+# --- Imports ---
 
-path_to_save_archi_sh="$HOME/Desktop/save_archi.sh"
+. "$SCRIPT_DIR/config.sh"
 
 # --- Functions ---
 path_strip(){
@@ -24,12 +25,7 @@ move(){
 temp_fold=".tmp"
 path=""
 
-if [ ! -e $path_to_save_archi_sh ]; then
-    echo "Save Shell Script not found. Please modify the path in clean_archi.sh."
-    exit
-fi
-saved_archi=$(grep -E -o "[_a-zA-Z]+.txt" "$path_to_save_archi_sh")
-saved_archi="$HOME/$saved_archi"
+saved_archi="$SAVE_FILE"
 if [ ! -e $saved_archi ]; then
     echo "Save file not found. Please save your architecture before."
     echo "Use the command : save"
@@ -39,10 +35,10 @@ fi
 # --- Main Script ---
 flag=0
 while IFS= read -r line; do
-    if [ $flag -eq 0 ]; then
+    if [ $flag -eq 0 ]; then # reading first line to get the root folder
         flag=$(($flag+1))
         path="$line"
-        echo $path
+        echo "Restoring $path"
         temp_fold="$path/$temp_fold"
         mkdir "$temp_fold"
     else
@@ -52,9 +48,13 @@ done < "$saved_archi"
 
 echo done retrieving what was saved
 
-rm -rf "$path"/*
+for file in "$path"/* "$path"/.[!.]* "$path"/..?*; do
+    [ -e "$file" ] && [ "$file" != "$temp_fold" ] && rm -rf "$file"
+done
 echo removed extra files
 
-mv "$temp_fold"/* "$path"
+for file in "$temp_fold"/* "$temp_fold"/.[!.]* "$temp_fold"/..?*; do
+    [ -e "$file" ] && mv "$file" "$path"/
+done
 rmdir "$temp_fold"
 echo everything is cleaned up
