@@ -1,12 +1,13 @@
 #!/bin/sh
 
-# --- USER SETTINGS ---
+SCRIPT_DIR=$(dirname "$0")
+# --- Imports ---
 
-file_name=last_save_archi.txt
+. "$SCRIPT_DIR/config.sh"
 
 # --- Functions ---
 archi_dfs() {
-    for file in "$*"/*; do
+    for file in "$*"/* "$*"/.[!.]* "$*"/..?*; do
         if [ -d "$file" ]; then
             echo "$file"
             archi_dfs "$file"
@@ -15,34 +16,50 @@ archi_dfs() {
         fi
     done
 }
+
 print_help(){
     echo "Description:"
     echo "  This command allows to save an architecture (recursivily)."
     echo "  Then using the clean command,"
     echo "  it removes any added file/folder to your architecture."
-    echo ""
+    echo 
     echo "Usage: save [OPTION or FOLDER]"
     echo "Options:"
-    echo "\t-h,--help\tDisplay some help about the command"
-    echo "\t-i,--info\tShow if possible the saved architecture"
-    echo "\t-c,--clear\tRemove if possible the saved architecture"
-    echo ""
+    echo "    -h,--help    Display some help about the command"
+    echo "    -i,--info    Show the saved architecture"
+    echo "    -c,--clear   Remove the saved architecture"
+    echo
     echo "Usage examples:"
-    echo "  save\t\t\t\t --> save \$PWD"
-    echo "  save my_folder\t\t --> save everything in my_folder"
+    echo "  save                  #save \$PWD"
+    echo "  save my_folder        #save everything in my_folder"
+}
+
+info(){
+    cat "$SAVE_FILE" 2> /dev/null
+    if [ "$?" -eq 1 ]; then
+        echo "The save file has not yet been created at $SAVE_FILE"
+    fi
+    err=1
+}
+
+clear_save_file(){
+    if [ ! -f "$SAVE_FILE" ];then
+        echo "The save file has already been deleted"
+    else
+        rm "$SAVE_FILE"
+    fi
+    err=1
 }
 
 parse(){
     while [ $# -gt 0 ]; do
         case "$1" in
             -i|--info) 
-                cat "$save_file"
-                err=1
+                info
                 return
                 ;;
             -c|--clear)
-                rm "$save_file"
-                err=1
+                clear_save_file
                 return
                 ;;
             -h|--help)
@@ -59,7 +76,6 @@ parse(){
 }
 
 # --- Global Variables ---
-save_file="$HOME/$file_name"
 path="$PWD"
 
 # --- Main Script ---
@@ -71,11 +87,16 @@ if [ $# -ge 1 ]; then
     [ $err -eq 1 ] && exit 1
 fi
 
-if [ -e "$save_file" ]; then
-    rm "$save_file"
+if [ -e "$SAVE_FILE" ]; then
+    rm "$SAVE_FILE"
 fi
 
-echo "$path" > "$save_file"
-archi_dfs "$path" >> "$save_file"
+if [ ! -d "$path" ]; then
+    echo "The path $path is not a valid folder."
+    exit 1
+fi
+
+echo "$path" > "$SAVE_FILE"
+archi_dfs "$path" >> "$SAVE_FILE"
 
 echo done saving
