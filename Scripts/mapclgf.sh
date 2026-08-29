@@ -7,7 +7,7 @@ mapclg() {
         if [ -f "$file" ]; then
             case "$file" in
                 *.[ch])
-                    echo "clang format de $file"
+                    echo "formatting $file"
                     clang-format $file -i
                     ;;
                 *)
