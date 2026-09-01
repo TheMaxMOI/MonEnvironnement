@@ -41,6 +41,7 @@ CACHE_NAME="exercise_name_holder"
 CACHE_FILE="$CACHE/$CACHE_NAME"
 FORMAT="clang-format"
 FMT_FLAG="-i"
+NAME=""
 
 
 ### === FUNCTIONS ===
@@ -54,35 +55,45 @@ start_exo () { # $1 = string, be nice and give [a-zA-Z0-9_]+ # Piscine has disti
     FOLD="$WORK_DIR/$1"
     CFILE="$FOLD/$1.c"
 
+    displayed=1
     if [ ! -f "$CFILE" ]; then
         mkdir "$FOLD"
         echo "#include \"$1.h\"" > "$CFILE"
     else
+        displayed=0
         echo "Resuming the exercise \"$1\""
     fi
 
 
     echo "$1" > "$CACHE_FILE"
 
-    echo "Ready to start the exercise \"$1\"."
+    if [ $displayed -eq 1 ]; then
+        echo "Ready to start the exercise \"$1\"."
+    fi
     echo "You can edit $(format_cpable "$CFILE")"
 }
 
 get_exo () {
     if [ ! -f "$CACHE_FILE" ]; then
-        echo "Missing cache at $(format_cpable "$CACHE"). It should have been holding the current exercise name."
-        exit $ERROR
+        echo $ERROR
     fi
     
-    cat "$CACHE_FILE"
+    NAME="$(cat "$CACHE_FILE")"
+    echo $OK
 }
 
 end_exo () { # no args -> reads from cache
-    name="$(get_exo)" 
-    echo "Identified current exercise to be \"$name\"."
+    NAME="" 
+    retcode="$(get_exo)"
+    if [ $retcode -eq 1 ]; then
+        echo "Missing cache at $(format_cpable "$CACHE"). It should have been holding the current exercise name."
+        exit $ERROR
+    fi
+
+    echo "Identified current exercise to be \"$NAME\"."
     
-    CFILE="$WORK_DIR/$name/$name.c"
-    HFILE="$WORK_DIR/$name/$name.h"
+    CFILE="$WORK_DIR/$NAME/$NAME.c"
+    HFILE="$WORK_DIR/$NAME/$NAME.h"
 
     "$FORMAT" "$FMT_FLAG" "$CFILE"
     echo "Formatted the file at $(format_cpable "$CFILE")."
@@ -91,17 +102,30 @@ end_exo () { # no args -> reads from cache
     echo "Generated a header file for $CFILE at $(format_cpable "$HFILE")."
     
     rm "$CACHE_FILE"
+    echo
     echo "The cache has been removed. You can now start a new exercise."
+}
+
+help () {
+    echo "This script is solely purposed for Piscine."
+    echo "It allows one to automate exercises framework (Create folder, Create C file, Create Header, Format C/H files)"
+    echo ""
+    echo "Usage: \`$0' [begin|end] <name?>"
+    echo " - begin,   starts or resume the framework. Creates folder and C file on start."
+    echo "            Fail if an exercise is already being edited"
+    echo " - end,     ends the opened framework. Create the header and format the C file"
+    echo "            Fail if no exercise opened"
+    echo "            Note: the header must be reviewed!"
 }
 
 
 ### === Main ===
 case "$1" in
     --help)
-        echo "TODO: help(){}"
+        help
         exit $OK
     ;;
-    start)
+    begin)
         shift
         if [ $# -ne 1 ]; then
             echo "Not the right amount of args for \"start\"."
@@ -113,7 +137,7 @@ case "$1" in
         start_exo "$1"
         exit $OK
     ;;
-    stop)
+    end)
         shift
         if [ $# -ne 0 ]; then
             echo "Too much args for \"stop\"."
