@@ -19,9 +19,9 @@ if [ "$1" = "--help" ]; then
     exit 1
 fi
 
-fname=$(parser $1)
+fname="$(parser $1)"
 tmp="$fname.make_header_tmp"
-FNAME=$(echo $fname | tr 'a-z' 'A-Z')
+FNAME=$(echo "$(basename "$fname")" | tr 'a-z' 'A-Z')
 
 echo "#ifndef ${FNAME}_H" > "$tmp"
 echo "#define ${FNAME}_H" >> "$tmp"
