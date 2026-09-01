@@ -41,3 +41,7 @@ alias cformat="$HOME/Desktop/scripts/mapclgf.sh"
 
 alias cheader="$HOME/Desktop/scripts/make_header.sh"
 
+alias switch="$HOME/Desktop/scripts/switch_format/switch_format.sh"
+
+alias work="$HOME/Desktop/scripts/piscine_framework/piscine_manager.sh"
+
