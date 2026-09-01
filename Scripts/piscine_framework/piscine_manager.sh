@@ -14,7 +14,7 @@ CONFLICT=3
 
 ### === SMALL HELPER FUNCTIONS ===
 format_cpable () { # $1 = string
-    echo "'$1\`"
+    echo "\`$1'"
 }
 
 ### === CONFIG CHECKS ===
@@ -45,6 +45,10 @@ NAME=""
 
 
 ### === FUNCTIONS ===
+tip () {
+    echo "More information with $(format_cpable "$0 --help")"
+}
+
 start_exo () { # $1 = string, be nice and give [a-zA-Z0-9_]+ # Piscine has distinct exercise
     if [ -f "$CACHE_FILE" ]; then
         echo "An exercise is already started!"
@@ -75,18 +79,20 @@ start_exo () { # $1 = string, be nice and give [a-zA-Z0-9_]+ # Piscine has disti
 
 get_exo () {
     if [ ! -f "$CACHE_FILE" ]; then
-        echo $ERROR
+        return $ERROR
     fi
-    
+
     NAME="$(cat "$CACHE_FILE")"
-    echo $OK
+    return $OK
 }
 
 end_exo () { # no args -> reads from cache
-    NAME="" 
-    retcode="$(get_exo)"
-    if [ $retcode -eq 1 ]; then
-        echo "Missing cache at $(format_cpable "$CACHE"). It should have been holding the current exercise name."
+    NAME=""
+    get_exo
+    retcode=$?
+    if [ $retcode -eq $ERROR ]; then
+        echo "No exercise yet!"
+        tip
         exit $ERROR
     fi
 
@@ -130,7 +136,7 @@ case "$1" in
         if [ $# -ne 1 ]; then
             echo "Not the right amount of args for \"start\"."
             echo
-            echo "More information with $(format_cpable "$0 --help")"
+            tip
             exit $ERROR
         fi
 
@@ -142,7 +148,7 @@ case "$1" in
         if [ $# -ne 0 ]; then
             echo "Too much args for \"stop\"."
             echo
-            echo "More information with $(format_cpable "$0 --help")"
+            tip
             exit $ERROR
         fi
 
@@ -154,4 +160,3 @@ case "$1" in
         exit $ERROR
     ;;
 esac
-
