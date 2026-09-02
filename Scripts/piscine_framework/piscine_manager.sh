@@ -131,7 +131,7 @@ cat_exo () {
 }
 
 abort_exo () {
-    rm "$CACHE_FILE" > /dev/null
+    rm "$CACHE_FILE" 2> /dev/null
     echo "The current exercise has been stopped."
 }
 
