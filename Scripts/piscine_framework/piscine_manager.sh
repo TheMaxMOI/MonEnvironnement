@@ -97,7 +97,7 @@ end_exo () { # no args -> reads from cache
     fi
 
     echo "Identified current exercise to be \"$NAME\"."
-    
+
     CFILE="$WORK_DIR/$NAME/$NAME.c"
     HFILE="$WORK_DIR/$NAME/$NAME.h"
 
@@ -106,22 +106,42 @@ end_exo () { # no args -> reads from cache
 
     "$MAKE_HEADER" "$CFILE"
     echo "Generated a header file for $CFILE at $(format_cpable "$HFILE")."
-    
+
     rm "$CACHE_FILE"
     echo
     echo "The cache has been removed. You can now start a new exercise."
+}
+
+cat_exo () {
+    NAME=""
+    get_exo
+    retcode=$?
+    if [ $retcode -eq $ERROR ]; then
+        echo "No exercise yet!"
+        tip
+        exit $ERROR
+    fi
+
+    echo "Identified current exercise to be \"$NAME\"."
+    echo
+
+    CFILE="$WORK_DIR/$NAME/$NAME.c"
+
+    cat "$CFILE"
 }
 
 help () {
     echo "This script is solely purposed for Piscine."
     echo "It allows one to automate exercises framework (Create folder, Create C file, Create Header, Format C/H files)"
     echo ""
-    echo "Usage: \`$0' [begin|end] <name?>"
+    echo "Usage: \`$0' [begin|end|cat] <name?>"
     echo " - begin,   starts or resume the framework. Creates folder and C file on start."
     echo "            Fail if an exercise is already being edited"
     echo " - end,     ends the opened framework. Create the header and format the C file"
     echo "            Fail if no exercise opened"
     echo "            Note: the header must be reviewed!"
+    echo " - cat,     shows the content of the current exercise"
+    echo "            Fail if no exercise opened"
 }
 
 
@@ -153,6 +173,18 @@ case "$1" in
         fi
 
         end_exo
+        exit $OK
+    ;;
+    cat)
+        shift
+        if [ $# -ne 0 ]; then
+            echo "Too much args for \"cat\"."
+            echo
+            tip
+            exit $ERROR
+        fi
+
+        cat_exo
         exit $OK
     ;;
     *)
