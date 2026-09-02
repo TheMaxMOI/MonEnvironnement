@@ -26,7 +26,16 @@ FNAME=$(echo "$(basename "$fname")" | tr 'a-z' 'A-Z')
 echo "#ifndef ${FNAME}_H" > "$tmp"
 echo "#define ${FNAME}_H" >> "$tmp"
 echo "" >> "$tmp"
-grep -E "^[a-zA-Z][a-zA-Z_0-9 ]* \*?[a-zA-Z][a-zA-Z_0-9]*\([a-zA-Z][a-zA-Z_0-9 \*,]*\)" "$1" | sed 's/$/;/' >> "$tmp"
+
+nameShape="[a-zA-Z][a-zA-Z0-9_]*"
+ptrShape="\**"
+arrShape="(\[\])?"
+typeShape="$nameShape( $nameShape)?"
+paramShape="(const )?$typeShape $ptrShape$nameShape$arrShape"
+functionShape="^$typeShape $ptrShape$nameShape\(($paramShape(, $paramShape)*)?\)\$"
+
+grep -E "$functionShape" "$1" | sed 's/$/;/' >> "$tmp"
+
 echo "" >> "$tmp"
 echo "#endif /* ! ${FNAME}_H */" >> "$tmp"
 
