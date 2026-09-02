@@ -130,6 +130,11 @@ cat_exo () {
     cat "$CFILE"
 }
 
+abort_exo () {
+    rm "$CACHE_FILE" > /dev/null
+    echo "The current exercise has been stopped."
+}
+
 help () {
     echo "This script is solely purposed for Piscine."
     echo "It allows one to automate exercises framework (Create folder, Create C file, Create Header, Format C/H files)"
@@ -142,6 +147,8 @@ help () {
     echo "            Note: the header must be reviewed!"
     echo " - cat,     shows the content of the current exercise"
     echo "            Fail if no exercise opened"
+    echo " - abort,   stops the current exercise being worked on."
+    echo "            Note: deletes the cache file holding the current exercise name"
 }
 
 
@@ -185,6 +192,18 @@ case "$1" in
         fi
 
         cat_exo
+        exit $OK
+    ;;
+    abort)
+        shift
+        if [ $# -ne 0 ]; then
+            echo "Too much args for \"abort\"."
+            echo
+            tip
+            exit $ERROR
+        fi
+
+        abort_exo
         exit $OK
     ;;
     *)
